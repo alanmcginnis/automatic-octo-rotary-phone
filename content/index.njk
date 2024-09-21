@@ -1,0 +1,45 @@
+---
+title: Photo Gallery
+---
+
+<h1>{{ title }}</h1>
+
+<div id="gallery"></div>
+
+<script src="https://unpkg.com/infinite-scroll@4/dist/infinite-scroll.pkgd.min.js"></script> 
+<script>
+   let infScroll = new InfiniteScroll( '#gallery', {
+    path: function() {
+      return `/images.json?page=${this.pageIndex + 1}&size=20`;
+    },
+    responseBody: 'json',
+    append: false,
+    status: '.page-load-status',
+    history: false
+  });
+
+  infScroll.on('load', function(response, path) {
+    // get loaded page number from path query params
+    let searchParams = new URLSearchParams(path.split('?')[1]);
+    let page = parseInt(searchParams.get('page'), 10);
+
+    // get subset of photos for current page
+    let startIndex = (page - 1) * 20;
+    let pagePhotos = response.slice(startIndex, startIndex + 20);
+    
+    // compile data into HTML
+    let itemsHTML = pagePhotos.map(getPhotoHTML).join('');
+    // convert HTML string into elements
+    let photoEls = infScroll.createDOMElements(itemsHTML);
+    // append item elements
+    infScroll.appendItems(photoEls);
+  });
+
+  function getPhotoHTML(photo) {
+    return `
+      <div class="photo">
+        <img src="${photo.url}" alt="Photo"/>
+      </div>  
+    `;
+  }
+</script>
